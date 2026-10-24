@@ -228,24 +228,24 @@ class App(tk.Tk):
 
         top = ttk.Frame(self, padding=(12, 8))
         top.pack(fill="x")
-        self.status = ttk.Label(top, text="Looking for keyboard…")
+        self.status = ttk.Label(top, text="正在查找键盘…")
         self.status.pack(side="left")
-        self.reconnect_button = ttk.Button(top, text="Reconnect",
+        self.reconnect_button = ttk.Button(top, text="重新连接",
                                            command=lambda: self.connect_keyboard())
         self.reconnect_button.pack(side="right")
-        ttk.Button(top, text="About", command=self._show_about).pack(side="right", padx=(0, 6))
+        ttk.Button(top, text="关于", command=self._show_about).pack(side="right", padx=(0, 6))
         self._about = None
         self.banner = tk.Frame(self, bg="#7a4f00")
         self.banner_text = tk.Label(self.banner, bg="#7a4f00", fg="white", anchor="w", padx=12,
                                     pady=6, wraplength=820, justify="left")
         self.banner_text.pack(side="left", fill="x", expand=True)
-        self.repair_button = ttk.Button(self.banner, text="Repair", command=self._repair)
+        self.repair_button = ttk.Button(self.banner, text="修复", command=self._repair)
 
         self.tabs = ttk.Notebook(self)
         self.tabs.pack(fill="both", expand=True, padx=8, pady=(0, 8))
-        self.tabs.add(self._lighting_tab(), text="  Lighting  ")
-        self.tabs.add(self._per_key_tab(), text="  Per-key colors  ")
-        self.tabs.add(self._music_tab(), text="  Music sync  ")
+        self.tabs.add(self._lighting_tab(), text="  灯光  ")
+        self.tabs.add(self._per_key_tab(), text="  逐键灯光  ")
+        self.tabs.add(self._music_tab(), text="  音乐律动  ")
         self._tab_names = ["lighting", "per-key", "music"]
         self.tabs.select(self._tab_names.index(self.settings["tab"]))
         self.tabs.bind("<<NotebookTabChanged>>", lambda _e: self.settings.__setitem__(
@@ -271,69 +271,68 @@ class App(tk.Tk):
         def label(text):
             ttk.Label(form, text=text).grid(row=row, column=0, sticky="w", padx=(0, 16), pady=6)
 
-        label("Lighting effect")
+        label("灯光效果")
         self.effect_box = ttk.Combobox(form, state="readonly", width=28,
                                        values=[e.name for e in self._effects])
         self.effect_box.bind("<<ComboboxSelected>>", lambda _e: self._changed())
         self.effect_box.grid(row=row, column=1, sticky="w")
         row += 1
 
-        label("Color")
+        label("颜色")
         color_row = ttk.Frame(form)
         color_row.grid(row=row, column=1, sticky="w")
         self.rainbow_var = tk.BooleanVar()
-        self.rainbow_check = ttk.Checkbutton(color_row, text="Rainbow (all colors)",
+        self.rainbow_check = ttk.Checkbutton(color_row, text="彩虹（循环所有颜色）",
                                              variable=self.rainbow_var, command=self._changed)
         self.rainbow_check.pack(side="left")
         self.color_swatch = Swatch(color_row, self.color, lambda _c: self._pick_color(), size=4)
         self.color_swatch.pack(side="left", padx=(16, 6))
-        self.color_button = ttk.Button(color_row, text="Pick color…", command=self._pick_color)
+        self.color_button = ttk.Button(color_row, text="选择颜色…", command=self._pick_color)
         self.color_button.pack(side="left")
         row += 1
 
-        label("Quick colors")
+        label("快捷颜色")
         presets = ttk.Frame(form)
         presets.grid(row=row, column=1, sticky="w")
         for _name, rgb in PRESETS:
             Swatch(presets, rgb, self._use_color).pack(side="left", padx=2)
         row += 1
 
-        label("Brightness")
+        label("亮度")
         self.brightness = LevelScale(form, 0, 4, 1, self._changed)
         self.brightness.grid(row=row, column=1, sticky="w")
         row += 1
 
-        label("Speed")
+        label("速度")
         self.speed = LevelScale(form, 0, 4, 1, self._changed)
         self.speed.grid(row=row, column=1, sticky="w")
         row += 1
 
-        label("Side lights")
+        label("侧灯")
         self.side_box = ttk.Combobox(form, state="readonly", width=28, values=list(SIDE_MODES))
         self.side_box.bind("<<ComboboxSelected>>", lambda _e: self._changed())
         self.side_box.grid(row=row, column=1, sticky="w")
         row += 1
 
         ttk.Label(form, foreground="#777777",
-                  text="The light bar above the arrow keys is set on the keyboard: "
-                       "press Fn + Left Shift to cycle its effects.").grid(
+                  text="方向键上方的灯条需在键盘上设置：按 Fn + 左 Shift 可循环切换其效果。").grid(
             row=row, column=0, columnspan=2, sticky="w", pady=(4, 12))
         row += 1
 
-        label("Battery")
+        label("电池")
         self.battery_label = ttk.Label(form, text="—")
         self.battery_label.grid(row=row, column=1, sticky="w")
         row += 1
 
-        label("Backlight sleep")
+        label("背光休眠")
         power = ttk.Frame(form)
         power.grid(row=row, column=1, sticky="w")
         self.keep_on_var = tk.BooleanVar()
         self.keep_on_check = ttk.Checkbutton(
-            power, text="Keep backlight on (uses more battery on 2.4G)",
+            power, text="背光常亮（2.4G 模式下更耗电）",
             variable=self.keep_on_var, command=self._sleep_changed)
         self.keep_on_check.pack(side="left")
-        ttk.Label(power, text="   otherwise turn off after").pack(side="left")
+        ttk.Label(power, text="   否则在以下时间后关闭").pack(side="left")
         self.sleep_box = ttk.Combobox(power, state="readonly", width=12,
                                       values=[sleep_label(m) for m in SLEEP_MINUTES])
         self.sleep_box.current(nearest_sleep_index(5))
@@ -343,25 +342,25 @@ class App(tk.Tk):
 
     def _per_key_tab(self):
         tab = ttk.Frame(self.tabs, padding=12)
-        ttk.Label(tab, text="Click or drag over keys to paint them. Right-click clears a key. "
-                            "Press Apply to send the colors to the keyboard.").pack(anchor="w")
+        ttk.Label(tab, text="点击或拖拽按键即可上色，右键清除单个按键的颜色，"
+                            "点击“应用到键盘”发送到键盘。").pack(anchor="w")
         self.paint_view = KeyboardCanvas(tab, lambda led: self.keys[led], paint=self._paint_key,
                                          height=330)
         self.paint_view.pack(fill="both", expand=True, pady=12)
 
         tools = ttk.Frame(tab)
         tools.pack(fill="x")
-        ttk.Label(tools, text="Brush").pack(side="left")
+        ttk.Label(tools, text="画笔").pack(side="left")
         self.brush_swatch = Swatch(tools, self.brush, lambda _c: self._pick_brush(), size=4)
         self.brush_swatch.pack(side="left", padx=6)
-        ttk.Button(tools, text="Pick…", command=self._pick_brush).pack(side="left", padx=(0, 10))
+        ttk.Button(tools, text="选择…", command=self._pick_brush).pack(side="left", padx=(0, 10))
         for _name, rgb in PRESETS:
             Swatch(tools, rgb, self._set_brush).pack(side="left", padx=2)
-        ttk.Button(tools, text="Fill all", command=lambda: self._fill_keys(self.brush)).pack(
+        ttk.Button(tools, text="全部填充", command=lambda: self._fill_keys(self.brush)).pack(
             side="left", padx=(12, 4))
-        ttk.Button(tools, text="Clear all", command=lambda: self._fill_keys((0, 0, 0))).pack(
+        ttk.Button(tools, text="全部清除", command=lambda: self._fill_keys((0, 0, 0))).pack(
             side="left")
-        self.apply_keys_button = ttk.Button(tools, text="Apply to keyboard",
+        self.apply_keys_button = ttk.Button(tools, text="应用到键盘",
                                             command=self._apply_keys)
         self.apply_keys_button.pack(side="right")
         return tab
@@ -370,44 +369,44 @@ class App(tk.Tk):
         tab = ttk.Frame(self.tabs, padding=12)
         self.music_view = KeyboardCanvas(tab, lambda led: self._music_colors[led])
         self.music_view.pack(fill="x")
-        ttk.Label(tab, text="The keys move with whatever this computer is playing, from any app. "
-                            "Your saved lighting comes back when you stop.").pack(
+        ttk.Label(tab, text="按键会随本机播放的音频律动（任意应用均可）。"
+                            "停止后将恢复你保存的灯光。").pack(
             anchor="w", pady=(12, 8))
 
         form = ttk.Frame(tab)
         form.pack(fill="x")
-        self.music_button = ttk.Button(form, text="Start", width=12, command=self._toggle_music)
+        self.music_button = ttk.Button(form, text="开始", width=12, command=self._toggle_music)
         self.music_button.grid(row=0, column=0, sticky="w", pady=6)
-        self.music_state = ttk.Label(form, text="Stopped")
+        self.music_state = ttk.Label(form, text="已停止")
         self.music_state.grid(row=0, column=1, sticky="w", padx=12)
 
-        ttk.Label(form, text="Style").grid(row=1, column=0, sticky="w", pady=6)
+        ttk.Label(form, text="风格").grid(row=1, column=0, sticky="w", pady=6)
         self.music_style_box = ttk.Combobox(form, state="readonly", width=28,
                                             values=list(MUSIC_STYLES))
         self.music_style_box.current(self.settings["music_style"])
         self.music_style_box.bind("<<ComboboxSelected>>", lambda _e: self._music_settings())
         self.music_style_box.grid(row=1, column=1, sticky="w", padx=12)
 
-        ttk.Label(form, text="Follow").grid(row=4, column=0, sticky="w", pady=6)
+        ttk.Label(form, text="跟随").grid(row=4, column=0, sticky="w", pady=6)
         follow_row = ttk.Frame(form)
         follow_row.grid(row=4, column=1, sticky="w", padx=12)
         self._follow_updating = False
         self.follow_vars = {}
-        for key, label in (("all", "All"),) + MUSIC_FOLLOW:
+        for key, label in (("all", "全部"),) + MUSIC_FOLLOW:
             var = tk.BooleanVar()
             ttk.Checkbutton(follow_row, text=label, variable=var,
                             command=lambda k=key: self._follow_toggled(k)).pack(side="left", padx=(0, 12))
             self.follow_vars[key] = var
         self._show_follow(self.settings["music_follow"])
-        ttk.Label(form, text="What the lights react to", foreground="#777777").grid(
+        ttk.Label(form, text="灯光响应对象", foreground="#777777").grid(
             row=5, column=1, sticky="w", padx=12)
 
-        ttk.Label(form, text="Sensitivity").grid(row=2, column=0, sticky="w", pady=6)
+        ttk.Label(form, text="灵敏度").grid(row=2, column=0, sticky="w", pady=6)
         self.sensitivity = LevelScale(form, 0.2, 2.0, 0.05, self._music_settings, fmt="{:.2f}")
         self.sensitivity.set(self.settings["music_sensitivity"])
         self.sensitivity.grid(row=2, column=1, sticky="w", padx=12)
 
-        ttk.Label(form, text="Brightness").grid(row=3, column=0, sticky="w", pady=6)
+        ttk.Label(form, text="亮度").grid(row=3, column=0, sticky="w", pady=6)
         self.music_brightness = LevelScale(form, 0.1, 1.0, 0.05, self._music_settings,
                                            fmt="{:.0%}")
         self.music_brightness.set(self.settings["music_brightness"])
@@ -422,7 +421,7 @@ class App(tk.Tk):
         self._connecting = True
         old, self.kb = self.kb, None
         if not quiet:
-            self.status.configure(text="Connecting…")
+            self.status.configure(text="正在连接…")
 
         def job():
             if old:
@@ -457,7 +456,7 @@ class App(tk.Tk):
             self.worker.submit(self.kb.close)  # after jobs already queued for it
             self.kb = None
         self._damaged = damaged
-        self.status.configure(text="Settings damaged" if damaged else "Not connected")
+        self.status.configure(text="设置已损坏" if damaged else "未连接")
         self.battery_label.configure(text="—")
         self.banner_text.configure(text=message)
         if damaged:
@@ -473,7 +472,7 @@ class App(tk.Tk):
             return
         self._connecting = True  # no reconnect attempts meanwhile
         self.banner.pack_forget()
-        self.status.configure(text="Repairing…")
+        self.status.configure(text="正在修复…")
 
         def job():
             kb = device.connect()
@@ -486,11 +485,11 @@ class App(tk.Tk):
             self._connecting = False
             self._damaged = False
             self.connect_keyboard()
-            self._toast(f"Repaired: put back the keyboard's {used}")
+            self._toast(f"已修复：恢复了键盘的{used}")
 
         def failed(exc):
             self._connecting = False
-            self._disconnected(f"Repair failed: {exc}", damaged=True)
+            self._disconnected(f"修复失败：{exc}", damaged=True)
 
         self.worker.submit(job, done, failed)
 
@@ -499,7 +498,7 @@ class App(tk.Tk):
         if self.kb and not self.kb.alive:
             if self.music:
                 self._stop_music()
-            self._disconnected("The keyboard was unplugged.")
+            self._disconnected("键盘连接已断开。")
         elif not self.kb:
             self.connect_keyboard(quiet=True)
         elif (self._polls % BATTERY_EVERY_POLLS == 0 and not self.music
@@ -513,9 +512,9 @@ class App(tk.Tk):
         """Battery level over 2.4G; over the cable the keyboard runs on USB power."""
         if not self.kb:
             return
-        text = battery_text(battery, self.kb.link.label == "USB cable", self.kb.last_battery())
+        text = battery_text(battery, self.kb.link.label == "USB 线缆", self.kb.last_battery())
         self.battery_label.configure(text=text)
-        suffix = f"  ·  Battery {battery}" if battery is not None else ""
+        suffix = f"  ·  电量 {battery}" if battery is not None else ""
         self._status_text = self.kb.description + suffix
         self.status.configure(text=self._status_text)
 
@@ -529,8 +528,8 @@ class App(tk.Tk):
         self.state.sleep = minutes
         self._sync_widgets()
         kb = self.kb
-        message = ("Backlight stays on" if minutes == 0
-                   else f"Backlight turns off after {sleep_label(minutes)} idle")
+        message = ("背光保持常亮" if minutes == 0
+                   else f"空闲 {sleep_label(minutes)} 后背光自动关闭")
         self.worker.submit(lambda: kb.set_sleep(minutes), lambda _r: self._toast(message),
                            self._io_failed)
 
@@ -541,7 +540,7 @@ class App(tk.Tk):
             return
         import webbrowser
         win = self._about = tk.Toplevel(self)
-        win.title(f"About {about.NAME}")
+        win.title(f"关于 {about.NAME}")
         win.geometry("620x640")
         win.transient(self)
         body = ttk.Frame(win, padding=16)
@@ -552,17 +551,17 @@ class App(tk.Tk):
         bold = base.copy()
         bold.configure(weight="bold")
         ttk.Label(body, text=about.NAME, font=title_font).pack(anchor="w")
-        ttk.Label(body, text=f"Version {about.__version__}").pack(anchor="w", pady=(2, 8))
+        ttk.Label(body, text=f"版本 {about.__version__}").pack(anchor="w", pady=(2, 8))
         ttk.Label(body, text=about.SUMMARY, wraplength=580, justify="left").pack(anchor="w")
         links = ttk.Frame(body)
         links.pack(anchor="w", pady=8)
-        for text, url in (("Website", about.WEBSITE), ("Report an issue", about.ISSUES),
-                          ("Full changelog", about.CHANGELOG_URL)):
+        for text, url in (("官方网站", about.WEBSITE), ("反馈问题", about.ISSUES),
+                          ("完整更新日志", about.CHANGELOG_URL)):
             link = tk.Label(links, text=text, fg="#3b82f6", cursor="hand2", font=base)
             link.pack(side="left", padx=(0, 16))
             link.bind("<Button-1>", lambda _e, u=url: webbrowser.open(u))
         ttk.Label(body, text=f"{about.LICENSE} · {about.COPYRIGHT}").pack(anchor="w")
-        ttk.Label(body, text="Changelog", font=bold).pack(anchor="w", pady=(14, 4))
+        ttk.Label(body, text="更新日志", font=bold).pack(anchor="w", pady=(14, 4))
         frame = ttk.Frame(body)
         frame.pack(fill="both", expand=True)
         text = tk.Text(frame, wrap="word", relief="flat", padx=10, pady=8, font=base,
@@ -576,14 +575,14 @@ class App(tk.Tk):
         text.tag_configure("sub", lmargin1=28, lmargin2=44, spacing3=3)
         entries = about.releases()
         for version, date, items in entries:
-            text.insert("end", f"Version {version}" + (f" · {date}" if date else "") + "\n", "version")
+            text.insert("end", f"版本 {version}" + (f" · {date}" if date else "") + "\n", "version")
             for depth, item in items:
                 text.insert("end", ("– " if depth else "• ") + about.plain(item) + "\n",
                             "sub" if depth else "item")
         if not entries:
-            text.insert("end", f"See {about.CHANGELOG_URL}")
+            text.insert("end", f"详见 {about.CHANGELOG_URL}")
         text.configure(state="disabled")
-        ttk.Button(body, text="Close", command=win.destroy).pack(anchor="e", pady=(10, 0))
+        ttk.Button(body, text="关闭", command=win.destroy).pack(anchor="e", pady=(10, 0))
 
     def _on_close(self):
         # Music sync stops with the window; the keyboard goes back to its own lighting.
@@ -601,7 +600,7 @@ class App(tk.Tk):
             if effect.id == effect_id:
                 return i
         info = effect_info(effect_id)
-        self._effects.append(Effect(effect_id, f"{info.name} (set on keyboard)", True, True))
+        self._effects.append(Effect(effect_id, f"{info.name}（键盘上设置）", True, True, info.en))
         self.effect_box.configure(values=[e.name for e in self._effects])
         return len(self._effects) - 1
 
@@ -660,13 +659,13 @@ class App(tk.Tk):
         self.preview.refresh()
 
         running = self.music is not None
-        self.music_button.configure(text="Stop" if running else "Start")
+        self.music_button.configure(text="停止" if running else "开始")
         enable(self.music_button, self.kb is not None and not self._music_starting)
         if running:
-            self.music_state.configure(text=f"On · {self.kb.link.label}" if self.kb else "On")
+            self.music_state.configure(text=f"运行中 · {self.kb.link.label}" if self.kb else "运行中")
         else:
-            self.music_state.configure(text="Starting…" if self._music_starting else
-                                       "Stopped" if self.kb else "Connect the keyboard first")
+            self.music_state.configure(text="正在启动…" if self._music_starting else
+                                       "已停止" if self.kb else "请先连接键盘")
 
     def _lighting_editable(self):
         return self.kb is not None and self.music is None and not self._music_starting
@@ -675,7 +674,7 @@ class App(tk.Tk):
         if not self._lighting_editable():
             return
         _rgb, hex_color = colorchooser.askcolor(color=_hex(self.color), parent=self,
-                                                title="Keyboard color")
+                                                title="键盘颜色")
         if hex_color:
             self._use_color(tuple(int(hex_color[i:i + 2], 16) for i in (1, 3, 5)))
 
@@ -719,14 +718,14 @@ class App(tk.Tk):
             self._disconnected(str(exc), damaged=True)
             return
         if isinstance(exc, OSError) or (self.kb and not self.kb.alive):
-            self._disconnected("Lost connection to the keyboard.")
-        self._toast(f"Couldn't update the keyboard: {exc}")
+            self._disconnected("与键盘的连接已断开。")
+        self._toast(f"无法更新键盘设置：{exc}")
 
     def _toast(self, message):
         """Show a short message in the status line, then restore it."""
         self.status.configure(text=message)
         self.after(6000, lambda: self.status.configure(
-            text=getattr(self, "_status_text", "") if self.kb else "Not connected"))
+            text=getattr(self, "_status_text", "") if self.kb else "未连接"))
 
     def _preview_color(self, led):
         state = self.state
@@ -749,7 +748,7 @@ class App(tk.Tk):
 
     def _pick_brush(self):
         _rgb, hex_color = colorchooser.askcolor(color=_hex(self.brush), parent=self,
-                                                title="Brush color")
+                                                title="画笔颜色")
         if hex_color:
             self._set_brush(tuple(int(hex_color[i:i + 2], 16) for i in (1, 3, 5)))
 
@@ -780,7 +779,7 @@ class App(tk.Tk):
         def done(_result):
             self.state.effect = PER_KEY
             self._show_state(self.state)
-            self._toast("Per-key colors applied")
+            self._toast("逐键灯光已应用")
 
         def failed(exc):
             self._sync_widgets()
@@ -847,7 +846,7 @@ class App(tk.Tk):
             try:
                 from .music import MusicSync  # needs numpy
             except ImportError as exc:
-                raise RuntimeError(f"music sync needs numpy ({exc}): pip install numpy") from None
+                raise RuntimeError(f"音乐律动需要 numpy（{exc}）：请运行 pip install numpy") from None
             return MusicSync(link, on_frame, on_error)
 
         def done(sync):
@@ -863,7 +862,7 @@ class App(tk.Tk):
             self._music_starting = False
             self.settings["music_on"] = False  # don't retry a start that can't work
             self._sync_widgets()
-            self._toast(f"Couldn't start music sync: {exc}")
+            self._toast(f"无法启动音乐律动：{exc}")
 
         # Queued on the worker so it starts after any pending keyboard writes.
         self.worker.submit(job, done, failed)
@@ -886,8 +885,8 @@ class App(tk.Tk):
     def _music_failed(self, exc):
         self._stop_music()
         if isinstance(exc, OSError) or (self.kb and not self.kb.alive):
-            self._disconnected("Lost connection to the keyboard.")
-        self._toast(f"Music sync stopped: {exc}")
+            self._disconnected("与键盘的连接已断开。")
+        self._toast(f"音乐律动已停止：{exc}")
 
 
 def _log_to_file_without_console():

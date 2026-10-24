@@ -16,8 +16,7 @@ DEVELOPER = "RadianceADM"
 WEBSITE = "https://github.com/RadianceADM/aula-f87-control"
 ISSUES = WEBSITE + "/issues"
 CHANGELOG_URL = WEBSITE + "/blob/main/CHANGELOG.md"
-SUMMARY = ("Backlight effects, per-key colors, music sync, sleep timer and battery level "
-           "for AULA F87 / F87 Pro keyboards")
+SUMMARY = ("AULA F87 / F87 Pro 键盘的背光效果、逐键调色、音乐律动、休眠定时与电量显示工具")
 LICENSE = "GPL-3.0-or-later"
 COPYRIGHT = "© 2026 RadianceADM"
 

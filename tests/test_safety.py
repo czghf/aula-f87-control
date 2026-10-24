@@ -122,7 +122,7 @@ class SafetyTest(unittest.TestCase):
         kb = self.keyboard(link)
         before = bytes(link.cfg), bytes(link.pal)
         link.damage_next_write = True
-        with self.assertRaisesRegex(DeviceError, "put back"):
+        with self.assertRaisesRegex(DeviceError, "恢复之前的设置"):
             kb.apply_lighting(Lighting(effect=2))
         self.assertEqual((bytes(link.cfg), bytes(link.pal)), before)
 
@@ -138,13 +138,13 @@ class SafetyTest(unittest.TestCase):
         with self.assertRaises(DamagedSettings):
             kb.set_sleep(0)
         self.assertEqual(link.writes, [])
-        self.assertEqual(kb.repair(), "last good settings")
+        self.assertEqual(kb.repair(), "上次正常设置")
         self.assertEqual(bytes(link.cfg), bytes(good.cfg))
         self.assertEqual(bytes(link.pal), bytes(good.pal))
 
     def test_repair_without_backup_uses_defaults(self):
         link = FakeLink(DAMAGED_CONFIG, SHIFTED_PALETTE)
-        self.assertEqual(self.keyboard(link).repair(), "default settings")
+        self.assertEqual(self.keyboard(link).repair(), "默认设置")
         self.assertEqual(bytes(link.cfg), DEFAULT_CONFIG)
         self.assertTrue(palette_ok(link.pal))
 
@@ -152,7 +152,7 @@ class SafetyTest(unittest.TestCase):
         link = FakeLink()
         bad = bytearray(DEFAULT_CONFIG)
         bad[1] = 0
-        with self.assertRaisesRegex(DeviceError, "Not writing"):
+        with self.assertRaisesRegex(DeviceError, "无法写入"):
             self.keyboard(link)._store(bad, DEFAULT_CONFIG)
         self.assertEqual(link.writes, [])
 
@@ -179,7 +179,7 @@ class SafetyTest(unittest.TestCase):
         with mock.patch.object(music, "open_capture", Capture):
             sync = music.MusicSync(link)
             try:
-                with self.assertRaisesRegex(DeviceError, "using the keyboard"):
+                with self.assertRaisesRegex(DeviceError, "正在占用键盘"):
                     self.keyboard(link).apply_lighting(Lighting(effect=3))
                 with self.assertRaises(music.MusicError):
                     music.MusicSync(link)

@@ -165,8 +165,7 @@ class DeviceLock:
 
     def __enter__(self):
         if not self.acquire():
-            raise DeviceError("Another program (or this app's music sync) is using the keyboard "
-                              "right now. Stop it and try again.")
+            raise DeviceError("另一个程序（或本软件的音乐律动）正在占用键盘，请先退出再试。")
         return self
 
     def __exit__(self, *_):
@@ -179,7 +178,7 @@ _TRANSIENT = {errno.EPROTO, errno.EPIPE, errno.ETIMEDOUT, errno.EAGAIN}
 
 
 class WiredLink:
-    label = "USB cable"
+    label = "USB 线缆"
     REPORT_SIZE = 520
 
     def __init__(self, dev):
@@ -222,8 +221,8 @@ class WiredLink:
     def _read(self, cmd, length):
         resp = self._request(self._header(cmd | 0x80, length))
         if len(resp) < 8 + length or resp[1] != cmd | 0x80 or resp[6] | resp[7] << 8 != length:
-            raise DeviceError("The keyboard sent an unexpected reply over USB. Is another program "
-                              "(or this app's music sync) using it right now?")
+            raise DeviceError("键盘通过 USB 返回了异常响应。是否有其他程序"
+                              "（或本软件的音乐律动）正在占用键盘？")
         return bytearray(resp[8:8 + length])
 
     # Writes are spaced out: the keyboard stores each block in flash, and
@@ -242,8 +241,8 @@ class WiredLink:
         # they fail every time.
         resp = self._request(bytes([0x06, 0x82, 0x01, 0x00, 0x01, 0x00, 0x06]), attempts=2)
         if len(resp) < 14 or resp[1] != 0x82:
-            raise DeviceError("The keyboard did not answer over USB. Is another program "
-                              "(or this app's music sync) using it right now?")
+            raise DeviceError("键盘没有通过 USB 应答。是否有其他程序"
+                              "（或本软件的音乐律动）正在占用键盘？")
         return MODELS.get(resp[13], "F87")
 
     can_read_blocks = True
@@ -289,7 +288,7 @@ class WiredLink:
 
 
 class DongleLink:
-    label = "2.4G receiver"
+    label = "2.4G 接收器"
     can_read_blocks = False  # only the config block has a known read command
 
     def __init__(self, dev):
@@ -329,7 +328,7 @@ class DongleLink:
                     echoed += 1
                     break
         if not echoed:
-            raise DeviceError("The keyboard stopped answering over 2.4G. Press a key to wake it up.")
+            raise DeviceError("键盘在 2.4G 模式下停止应答了，请按任意键唤醒它。")
 
     def read_config(self, attempts=3):
         parts = {}
@@ -346,8 +345,8 @@ class DongleLink:
                 break
         if len(parts) < 10:
             raise DeviceError(
-                "The 2.4G receiver is plugged in but the keyboard is not answering. "
-                "Switch the keyboard to 2.4G mode and press a key to wake it.")
+                "2.4G 接收器已插入，但键盘没有应答。"
+                "请将键盘切换到 2.4G 模式，并按任意键唤醒它。")
         body = bytearray()
         for seq in range(10):
             body += parts[seq][5:5 + min(parts[seq][4], 14)]
@@ -435,8 +434,8 @@ class Battery:
 
     def __str__(self):
         if self.charging:
-            return "charging"
-        return f"{self.percent}%" if self.percent is not None else "unknown"
+            return "充电中"
+        return f"{self.percent}%" if self.percent is not None else "未知"
 
 
 # --------------------------------------------------------------------------- cache
@@ -530,8 +529,8 @@ class Keyboard:
                 return cfg
             time.sleep(0.25 * (attempt + 1))  # may be a stale reply; ask again
         raise DamagedSettings(
-            "The keyboard's saved settings look damaged, which can stop it from typing. "
-            "Repair puts back its last good settings.")
+            "键盘保存的设置看起来已损坏，可能导致无法输入。"
+            "使用“修复”功能可以恢复上次正常的设置。")
 
     def _device_palette(self):
         """The palette stored in the keyboard, or None if it can't be read
@@ -559,7 +558,7 @@ class Keyboard:
         intact; if not, put the previous ones back."""
         cfg[CFG_CUSTOM] = 1 if cfg[CFG_EFFECT] == PER_KEY else 0
         if not config_ok(cfg) or (pal is not None and not palette_ok(pal)):
-            raise DeviceError("Not writing: the new settings don't look valid.")
+            raise DeviceError("无法写入：新设置校验未通过。")
         write_pal = pal is not None and (before_pal is None or bytes(pal) != bytes(before_pal))
         if keys is None and not write_pal and bytes(cfg) == bytes(before_cfg):
             return  # nothing changed
@@ -572,12 +571,11 @@ class Keyboard:
         try:
             self._read_config()
             if write_pal and self.link.can_read_blocks and self._device_palette() is None:
-                raise DamagedSettings("palette")
+                raise DamagedSettings("色板")
         except DamagedSettings:
             time.sleep(1.0)
             self._put_back(before_cfg, before_pal or self._good_palette())
-            raise DeviceError("The keyboard didn't store that change properly, so its previous "
-                              "settings were put back. Try again in a moment.") from None
+            raise DeviceError("键盘未能正确保存该更改，已恢复之前的设置。请稍后重试。") from None
         if pal is not None:
             self.cache.put("palette", pal)
 
@@ -593,7 +591,7 @@ class Keyboard:
         saved = config_ok(self.cache.get("good_config", CFG_LEN))
         with DeviceLock():
             self._put_back(self._good_config(), self._good_palette())
-        return "last good settings" if saved else "default settings"
+        return "上次正常设置" if saved else "默认设置"
 
     # ---------------------------------------------------------------- operations
 
@@ -719,4 +717,4 @@ def _connect():
     if problems:
         # Prefer the most helpful message (permission / wake-up hints come last).
         raise DeviceError(problems[-1])
-    raise DeviceError("No AULA F87 found. Plug in the USB cable or the 2.4G receiver.")
+    raise DeviceError("未找到 AULA F87。请插入 USB 线或 2.4G 接收器。")
